@@ -13,6 +13,36 @@ try:
 except Exception as e:
     st.error("Erro na Chave API. Verifique os Secrets do Streamlit.")
 
+# --- CUSTOMIZAÇÃO VISUAL (CSS) ---
+st.markdown("""
+    <style>
+    /* Fundo do App em Branco */
+    .stApp {
+        background-color: #FFFFFF;
+    }
+    
+    /* Estilização dos Botões */
+    div.stButton > button {
+        width: 100%;
+        border-radius: 5px;
+        height: 3em;
+        transition: all 0.3s ease;
+    }
+
+    /* Efeito ao passar o mouse (Azul) */
+    div.stButton > button:hover {
+        background-color: #007BFF !important;
+        color: white !important;
+        border-color: #007BFF !important;
+    }
+    
+    /* Estilo das abas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] button [data-testid="stWidgetLabel"] {
+        font-size: 18px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # 2. LISTAS OFICIAIS
 POLICIAIS = ["Selecione o Policial..."] + ["ST J. CARLOS", "SGT VALTER", "SGT JOSÉ LOPES", "SGT MARCOS PAULO", "SGT RODRIGUES", "SGT ADELSON", "SGT DANTAS", "SGT ELSON", "SGT JOSÉ", "SGT LEANDRO", "SGT MARCONI", "SGT MARCELO", "SGT CARVALHO", "SGT ANDERSON", "SGT NILTON", "SGT R. MARQUES", "CB ANDERSON", "CB ROBSON", "CB LUCIANO", "CB GOMES", "CB ISRAEL", "CB DOUGLAS", "CB C. LEITE", "SD RAQUEL", "SD L. DIAS", "SD CARLOS", "SD PEREIRA", "SD BRUNO"]
 EQUIPAMENTOS = ["Selecione o Equipamento..."] + ["GERADOR QCG", "GERADOR APMB", "GERADOR 1º BPM", "GERADOR 2º BPM", "GERADOR 3º BPM", "GERADOR 4º BPM", "GERADOR 5º BPM", "GERADOR 6º BPM", "GERADOR 7º BPM", "GERADOR 8º BPM", "GERADOR 9º BPM", "GERADOR 10º BPM", "GERADOR 11º BPM", "GERADOR 12º BPM", "GERADOR 13º BPM", "GERADOR 14º BPM", "GERADOR 15º BPM", "GERADOR CMT GERAL", "GERADOR SUB CMT GERAL"]
@@ -91,9 +121,7 @@ with tab2:
             st.dataframe(df_filtrado, use_container_width=True)
             st.bar_chart(data=df_filtrado, x='Equipamento', y='Litros')
             
-            # --- CORREÇÃO DO ERRO DO GEMINI ---
             if st.button("Analisar este período com Gemini"):
-                # Criamos um resumo de texto simples para evitar erros de carateres na API
                 resumo_texto = df_filtrado[['Equipamento', 'Litros']].to_string(index=False)
                 prompt_ia = f"Analise estes dados de abastecimento policial do mês {meses_lista[mes_sel_num]}:\n\n{resumo_texto}\n\nO consumo está normal? Identifique o maior gasto."
                 
@@ -103,8 +131,8 @@ with tab2:
                         st.write("🤖 **Análise da IA:**")
                         st.write(res.text)
                 except Exception as e:
-                    st.error(f"Erro na IA: O prompt enviado pode estar vazio ou a API falhou.")
+                    st.error(f"Erro na IA.")
         else:
             st.warning(f"Sem registros para {meses_lista[mes_sel_num]} de {ano_sel}.")
     else:
-        st.info("O banco de dados está vazio. Registre um abastecimento para ver os filtros.")
+        st.info("O banco de dados está vazio.")
