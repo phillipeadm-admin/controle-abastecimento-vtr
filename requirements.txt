@@ -2,3 +2,4 @@ streamlit
 google-generativeai
 pandas
 pytz
+streamlit-js-eval
