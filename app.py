@@ -48,21 +48,23 @@ tab1, tab2 = st.tabs(["📝 Registro", "📊 Dashboard de Pesquisa"])
 
 with tab1:
     st.subheader("Novo Lançamento")
-    st.info(f"📅 Horário: {agora_str}")
+    st.info(f"📅 Horário Oficial: {agora_str}")
     
     with st.form("form_abastecimento", clear_on_submit=True):
         policial_select = st.selectbox("Policial:", POLICIAIS)
         equip_select = st.selectbox("Equipamento:", EQUIPAMENTOS)
-        litros_input = st.number_input("Litros:", min_value=0.0, step=0.1)
-        foto_anexo = st.file_uploader("Anexar Comprovante (Obrigatório)", type=['png', 'jpg', 'jpeg'])
+        litros_input = st.number_input("Quantidade de Litros:", min_value=0.0, step=0.1)
+        
+        # --- CAMPO DE IMAGEM COM TEXTO EM PORTUGUÊS ---
+        st.write("**Anexar Imagem do Comprovante (Obrigatório)**")
+        foto_anexo = st.file_uploader("Escolha um arquivo ou arraste aqui", type=['png', 'jpg', 'jpeg'], label_visibility="collapsed")
         
         enviar = st.form_submit_button("Realizar Registro")
         
         if enviar:
             if policial_select != "Selecione o Policial..." and equip_select != "Selecione o Equipamento..." and litros_input > 0 and foto_anexo is not None:
-                loc_info = f"{pos_json['lat']}, {pos_json['lon']}" if pos_json else "GPS não disponível"
+                loc_info = f"{pos_json['lat']}, {pos_json['lon']}" if pos_json else "GPS não autorizado"
                 
-                # Criar dicionário de dados
                 novo_registro = {
                     "Data/Hora": agora_str,
                     "Policial": policial_select,
@@ -72,7 +74,7 @@ with tab1:
                 }
                 
                 salvar_dados(novo_registro)
-                st.success("✅ REGISTRO SALVO NO BANCO DE DADOS!")
+                st.success("✅ REGISTRO SALVO COM SUCESSO!")
                 st.balloons()
             else:
                 st.error("⚠️ Erro: Todos os campos são obrigatórios!")
@@ -82,7 +84,6 @@ with tab2:
     df_historico = carregar_dados()
 
     if not df_historico.empty:
-        # Menus de Seleção por Ano e Mês
         anos = sorted(df_historico['Data/Hora'].dt.year.unique(), reverse=True)
         meses = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho", 
                  7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
@@ -93,18 +94,14 @@ with tab2:
         with col2:
             mes_sel_num = st.selectbox("Filtrar por Mês:", list(meses.keys()), format_func=lambda x: meses[x], index=agora.month-1)
 
-        # Filtragem dos dados
         df_filtrado = df_historico[(df_historico['Data/Hora'].dt.year == ano_sel) & 
                                    (df_historico['Data/Hora'].dt.month == mes_sel_num)]
 
         if not df_filtrado.empty:
             st.write(f"Exibindo registros de **{meses[mes_sel_num]} de {ano_sel}**:")
             st.dataframe(df_filtrado, use_container_width=True)
-            
-            # Gráfico Real baseado nos filtros
             st.bar_chart(data=df_filtrado, x='Equipamento', y='Litros')
             
-            # Análise IA
             if st.button("Analisar este período com Gemini"):
                 prompt = f"Analise o consumo de combustível deste mês ({meses[mes_sel_num]}): {df_filtrado.to_string()}"
                 res = model.generate_content(prompt)
@@ -113,4 +110,4 @@ with tab2:
         else:
             st.warning(f"Nenhum registro encontrado para {meses[mes_sel_num]} de {ano_sel}.")
     else:
-        st.info("O banco de dados está vazio. Os registros aparecerão aqui assim que forem realizados.")
+        st.info("O banco de dados está vazio. Registre um abastecimento para visualizar os dados.")
