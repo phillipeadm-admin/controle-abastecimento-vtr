@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import pytz  # Biblioteca para fuso horário
 import google.generativeai as genai
 
 # 1. CONFIGURAÇÃO DA INTELIGÊNCIA (AI STUDIO)
@@ -11,8 +12,12 @@ except:
     st.error("Configure a GOOGLE_API_KEY nos Secrets do Streamlit.")
 
 # 2. SEUS CADASTROS (Menus Suspensos)
-POLICIAIS = ["Sd Raquel", "Sd L. Dias", "Sgt Airton", "Sgt Araujo","Sgt Rondinele","Sgt Vaz"]
+POLICIAIS = ["Sd Raquel", "Sd L. Dias", "Sgt Silva", "Ten Castro"]
 EQUIPAMENTOS = ["Gerador QCG", "Gerador APMB", "Gerador 1BPM", "Viatura 01"]
+
+# --- LÓGICA DO HORÁRIO DE BRASÍLIA ---
+fuso_br = pytz.timezone('America/Sao_Paulo')
+agora_br = datetime.now(fuso_br).strftime("%d/%m/%Y %H:%M:%S")
 
 # CONFIGURAÇÃO DO APP
 st.set_page_config(page_title="Abastecimento VTR", layout="centered")
@@ -23,9 +28,8 @@ tab1, tab2 = st.tabs(["📝 Registro", "📊 Dashboard"])
 with tab1:
     st.subheader("Novo Lançamento")
     
-    # Carimbo de data/hora automático
-    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    st.info(f"📅 Data/Hora: {agora}")
+    # Exibe o carimbo de Brasília automaticamente
+    st.info(f"📅 Horário Oficial (Brasília): {agora_br}")
 
     with st.form("meu_formulario", clear_on_submit=True):
         policial_select = st.selectbox("Policial:", POLICIAIS)
@@ -36,18 +40,16 @@ with tab1:
         enviar = st.form_submit_button("Salvar Registro")
         
         if enviar:
-            st.success(f"Registrado: {policial_select} - {litros_input}L no {equip_select}")
+            # Aqui usamos o 'agora_br' para garantir que o registro salvo seja preciso
+            st.success(f"Registrado em {agora_br}: {policial_select} - {litros_input}L no {equip_select}")
             st.balloons()
 
 with tab2:
     st.subheader("Painel de Controle")
-    
-    # Criando os dados para o gráfico (Evita o NameError)
     dados_grafico = pd.DataFrame({
         'Equipamento': EQUIPAMENTOS,
-        'Litros': [45, 65, 27, 180] # Valores de exemplo
+        'Litros': [45, 65, 27, 180] 
     })
-    
     st.bar_chart(data=dados_grafico, x='Equipamento', y='Litros')
 
     if st.button("Analisar com IA"):
